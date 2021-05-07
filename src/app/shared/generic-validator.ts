@@ -46,26 +46,31 @@ export class GenericValidator {
   processMessages(): { [key: string]: string } {
     const messages = {};
     for (const controlKey in this.container.controls) {
-      if (this.container.controls.hasOwnProperty(controlKey)) {
-        const c = this.container.controls[controlKey];
-        // If it is a FormGroup, process its child controls.
-        if (c instanceof FormGroup) {
-          const childMessages = this.processMessages();
-          Object.assign(messages, childMessages);
-        } else {
-          // Only validate if there are validation messages for the control
-          if (this.validationMessages[controlKey]) {
-            messages[controlKey] = '';
-            if ((c.dirty || c.touched) && c.errors) {
-              Object.keys(c.errors).map((messageKey) => {
-                if (this.validationMessages[controlKey][messageKey]) {
-                  messages[controlKey] +=
-                    this.validationMessages[controlKey][messageKey] + ' ';
-                }
-              });
-            }
+      if (!this.container.controls.hasOwnProperty(controlKey)) {
+        continue;
+      }
+
+      const control = this.container.controls[controlKey];
+      // If it is a FormGroup, process its child controls.
+      if (control instanceof FormGroup) {
+        const childMessages = this.processMessages();
+        Object.assign(messages, childMessages);
+        continue;
+      }
+
+      // Only validate if there are validation messages for the control
+      if (!this.validationMessages[controlKey]) {
+        continue;
+      }
+
+      messages[controlKey] = '';
+      if ((control.dirty || control.touched) && control.errors) {
+        Object.keys(control.errors).map((messageKey) => {
+          const message = this.validationMessages[controlKey][messageKey];
+          if (message) {
+            messages[controlKey] += message + ' ';
           }
-        }
+        });
       }
     }
 
